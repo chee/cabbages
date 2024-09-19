@@ -1,11 +1,17 @@
 {
 	"name": "cabbages",
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"description": "secret patch utility",
 	"main": "output/cabbages.js",
 	"types": "output/cabbages.d.ts",
 	"type": "module",
-	"keywords": ["diff", "patch", "pojo", "automerge", "braid"],
+	"keywords": [
+		"diff",
+		"patch",
+		"pojo",
+		"automerge",
+		"braid"
+	],
 	"scripts": {
 		"test": "node --import=tsx cabbages.test.ts",
 		"mk": "tsup cabbages.ts --format esm --dts -d output",
