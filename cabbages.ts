@@ -86,10 +86,10 @@ export function apply<T>(
 				let op = DELETE
 					? ("del" as const)
 					: APPEND
-						? ("add" as const)
-						: INSERT
-							? ("ins" as const)
-							: ("replace" as const)
+					? ("add" as const)
+					: INSERT
+					? ("ins" as const)
+					: ("replace" as const)
 
 				if (typeof target[key] == "undefined") {
 					// todo what if it's a function that would return a string?
@@ -193,14 +193,7 @@ export const patch = apply
 class OperationError extends Error {}
 
 export function fromAutomerge(autopatch: AutomergePatch): Patch
-export function fromAutomerge(
-	autopatch: AutomergePatch,
-	cb: (...args: Patch) => void
-): void
-export function fromAutomerge(
-	autopatch: AutomergePatch,
-	cb?: (...args: Patch) => void
-) {
+export function fromAutomerge(autopatch: AutomergePatch) {
 	let path = autopatch.path.slice(0, -1)
 	let key = autopatch.path[autopatch.path.length - 1]
 
@@ -211,24 +204,16 @@ export function fromAutomerge(
 		case "unmark":
 			throw new OperationError(`can't handle this: ${autopatch.action}`)
 		case "del": {
-			return cb
-				? cb(path, [key as number, +key + (autopatch.length || 0)])
-				: [path, [key as number, +key + (autopatch.length || 0)]]
+			return [path, [key as number, Number(key) + (autopatch.length || 1)]]
 		}
 		case "insert": {
-			return cb
-				? cb(path, [key as number, key as number], autopatch.values)
-				: [path, [key as number, key as number], autopatch.values]
+			return [path, [key as number, key as number], autopatch.values]
 		}
 		case "splice": {
-			return cb
-				? cb(path, [key as number, key as number], [autopatch.value])
-				: [path, [key as number, key as number], [autopatch.value]]
+			return [path, [key as number, key as number], [autopatch.value]]
 		}
 		case "put": {
-			return cb
-				? cb(path, key!, autopatch.value)
-				: [path, key!, autopatch.value]
+			return [path, key!, autopatch.value]
 		}
 	}
 }
