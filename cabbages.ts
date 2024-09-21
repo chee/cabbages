@@ -36,6 +36,14 @@ export type PatchRange = [number?, number?] | PathPart
 
 type Patch = [path: PathPart[], range: PatchRange, val?: any]
 
+export function pojo(target: any): target is Record<string | number, any> {
+	return (
+		typeof target == "object" &&
+		typeof target != null &&
+		Object.getPrototypeOf(target) == Object.prototype
+	)
+}
+
 /**
  * walk a path in an obj, optionally mutating it to insert missing parts
  * for the inspiration of @see https://github.com/braid-org/braid-spec/blob/aea85367d60793c113bdb305a4b4ecf55d38061d/draft-toomim-httpbis-range-patch-01.txt
@@ -67,7 +75,20 @@ export function apply<T>(
 			if (typeof reviver == "function") {
 				val = reviver(val, key, target, path, originalObject, range)
 			}
-			if (Array.isArray(range) || typeof range == "number") {
+
+			const RANGE_ARRAY = Array.isArray(range)
+
+			if (
+				pojo(target) &&
+				RANGE_ARRAY &&
+				typeof key == "undefined" &&
+				typeof range[0] == "string"
+			) {
+				delete target[range[0]]
+				return
+			}
+
+			if (RANGE_ARRAY || typeof range == "number") {
 				if (typeof key == "undefined") {
 					throw new Error("cant treat top level as a seq")
 				}
@@ -132,7 +153,10 @@ export function apply<T>(
 						}
 						case "replace":
 						case "ins": {
-							target[key] = seq.slice(0, start) + val + seq.slice(end)
+							target[key] =
+								seq.slice(0, start) +
+								(typeof val == "string" ? val : val.join("")) +
+								seq.slice(end)
 							return
 						}
 						case "del": {
@@ -144,6 +168,11 @@ export function apply<T>(
 						}
 					}
 				}
+
+				if (pojo(seq) && RANGE_ARRAY && typeof range[0] == "string") {
+					delete seq[range[0]]
+				}
+
 				// todo should impl for typed arrays?
 				throw new Error("not implemented")
 			}
@@ -152,17 +181,33 @@ export function apply<T>(
 				if (typeof range != "string") {
 					throw new Error(`can't index top-level map with ${range}`)
 				}
-				target[range] = val
+				if (typeof val == "undefined") {
+					delete target[range]
+				} else {
+					target[range] = val
+				}
+
 				return
 			}
 			if (typeof target[key] == "undefined") {
 				target[key] = {}
 			}
 			// put/delete
-			if (typeof val == "undefined") {
-				delete target[key][range]
+			if (RANGE_ARRAY) {
+				let [a, b] = range
+				if (a != null && b != null) {
+					if (typeof val == "undefined" && a != null && b != null) {
+						delete target[key][a || b]
+					} else {
+						target[key][a || b] = val
+					}
+				}
 			} else {
-				target[key][range] = val
+				if (typeof val == "undefined") {
+					delete target[key][range]
+				} else {
+					target[key][range] = val
+				}
 			}
 
 			return
@@ -204,7 +249,9 @@ export function fromAutomerge(autopatch: AutomergePatch) {
 		case "unmark":
 			throw new OperationError(`can't handle this: ${autopatch.action}`)
 		case "del": {
-			return [path, [key as number, Number(key) + (autopatch.length || 1)]]
+			return typeof key == "string"
+				? [path, key]
+				: [path, [key, key + (autopatch.length || 1)]]
 		}
 		case "insert": {
 			return [path, [key as number, key as number], autopatch.values]
