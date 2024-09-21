@@ -36,6 +36,14 @@ export type PatchRange = [number?, number?] | PathPart
 
 type Patch = [path: PathPart[], range: PatchRange, val?: any]
 
+export function pojo(target: any): target is Record<string | number, any> {
+	return (
+		typeof target == "object" &&
+		typeof target != null &&
+		Object.getPrototypeOf(target) == Object.prototype
+	)
+}
+
 /**
  * walk a path in an obj, optionally mutating it to insert missing parts
  * for the inspiration of @see https://github.com/braid-org/braid-spec/blob/aea85367d60793c113bdb305a4b4ecf55d38061d/draft-toomim-httpbis-range-patch-01.txt
@@ -67,9 +75,24 @@ export function apply<T>(
 			if (typeof reviver == "function") {
 				val = reviver(val, key, target, path, originalObject, range)
 			}
-			if (Array.isArray(range) || typeof range == "number") {
+
+			const RANGE_ARRAY = Array.isArray(range)
+
+			if (
+				pojo(target) &&
+				RANGE_ARRAY &&
+				typeof key == "undefined" &&
+				typeof range[0] == "string"
+			) {
+				delete target[range[0]]
+				return
+			}
+
+			if (RANGE_ARRAY || typeof range == "number") {
 				if (typeof key == "undefined") {
-					throw new Error("cant treat top level as a seq")
+					let seq = target
+
+					// throw new Error("cant treat top level as a seq")
 				}
 
 				key = key!
@@ -144,8 +167,13 @@ export function apply<T>(
 						}
 					}
 				}
-				// todo should impl for typed arrays?
-				throw new Error("not implemented")
+
+				if (pojo(seq) && 0 in range && typeof range[0] == "string") {
+					delete seq[range[0]]
+				}
+
+				// // todo should impl for typed arrays?
+				// throw new Error("not implemented")
 			}
 
 			if (typeof key == "undefined") {
@@ -207,7 +235,7 @@ export function fromAutomerge(autopatch: AutomergePatch) {
 			return [path, [key as number, Number(key) + (autopatch.length || 1)]]
 		}
 		case "insert": {
-			return [path, [key as number, key as number], autopatch.values]
+			return [path, key as number, autopatch.values.join("")]
 		}
 		case "splice": {
 			return [path, [key as number, key as number], [autopatch.value]]

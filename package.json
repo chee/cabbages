@@ -13,12 +13,12 @@
 		"braid"
 	],
 	"scripts": {
-		"test": "node --import=tsx cabbages.test.ts",
+		"test": "node --import=tsx cabbages.test.ts; pnpm -r test",
 		"mk": "tsup cabbages.ts --format esm --dts -d output",
 		"w": "pnpm mk --watch"
 	},
 	"author": "chee",
-	"license": "GPL-3.0+",
+	"license": "MIT",
 	"devDependencies": {
 		"@automerge/automerge": "^2.2.5",
 		"@automerge/automerge-repo": "^1.2.1",

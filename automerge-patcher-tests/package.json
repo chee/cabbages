@@ -1,0 +1,8 @@
+{
+    "name":"cabbages-automerge-patcher-tests",
+    "private":true,
+    "scripts": {
+        "test": "vitest"
+    },
+    "devDependencies":{"vitest":"^2.1.1"}
+}
