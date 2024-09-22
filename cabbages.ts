@@ -131,8 +131,8 @@ export function apply<T>(
 						case "replace":
 						case "ins": {
 							Array.isArray(val)
-								? seq.splice(start!, end! - 1, ...val)
-								: seq.splice(start!, end! - 1, val)
+								? seq.splice(start!, end! - start!, ...val)
+								: seq.splice(start!, end! - start!, val)
 							return
 						}
 						case "del": {

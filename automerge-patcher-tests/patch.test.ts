@@ -42,6 +42,16 @@ describe("Applying Patches", () => {
 			expected: ["hello", "there", "my", "world"],
 		},
 		{
+			name: "replace item in array",
+			patch: {
+				action: "put",
+				path: ["longarray", 4],
+				value: 1,
+			},
+			path: "longarray",
+			expected: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+		},
+		{
 			name: "delete array entry",
 			patch: {
 				action: "del",

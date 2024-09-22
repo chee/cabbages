@@ -56,6 +56,15 @@ test.test("patch", async t => {
 		})
 	})
 
+	await t.test("replaces item in array", t => {
+		let path = ["items"]
+		let obj = {items: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}
+		apply(path, obj, 4, 1)
+		assert.deepEqual(obj, {
+			items: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+		})
+	})
+
 	await t.test("replaces range in string", t => {
 		let path = ["text"]
 		let obj = {text: "hello world"}
