@@ -14,3 +14,5 @@ Changes:
 - dropped the `unpatch` tests because that's none of my business.
 - dropped the `inc` test because cabbages doesn't support `inc`
 - dropped the `stable` tests because cabbages only works with automerge-next
+- added a test for a `put` operation in an array because i broke that and
+  neither of us were testing for it!
