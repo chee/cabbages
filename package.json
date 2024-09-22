@@ -13,6 +13,7 @@
 		"braid"
 	],
 	"scripts": {
+		"prepublish": "pnpm mk",
 		"test": "node --import=tsx cabbages.test.ts; pnpm -r test",
 		"mk": "tsup cabbages.ts --format esm --dts -d output",
 		"w": "pnpm mk --watch"
