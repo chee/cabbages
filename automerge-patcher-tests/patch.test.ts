@@ -7,11 +7,10 @@ import {
 import {beforeEach, describe, expect, test} from "vitest"
 import {documentData} from "./data"
 import {clone, getProperty} from "./helpers.ts"
-import {apply, fromAutomerge} from "../cabbages.ts"
+import {apply, fromAutomerge} from "../cabbages/cabbages.ts"
 
 function applyPatch<T>(doc: Doc<T>, patch: AutomergePatch) {
-	const [path, range, val] = fromAutomerge(patch)
-	apply(path, doc, range, val)
+	apply(doc, ...fromAutomerge(patch))
 }
 
 describe("Applying Patches", () => {
@@ -92,7 +91,7 @@ describe("Applying Patches", () => {
 			path: "people.entities.id-1",
 			expected: null,
 		},
-		/* 
+		/*
     cabbages is ignoring increments until more data comes in
     {
 			name: "increment counter",

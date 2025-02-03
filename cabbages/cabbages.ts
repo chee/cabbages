@@ -53,18 +53,25 @@ export function pojo(target: any): target is Record<string | number, any> {
  */
 
 export function apply<T>(
-	path: PathPart[],
 	target: any,
+	path: PathPart[],
 	range: PatchRange,
-	val?: any,
-	reviver?: (
-		value: any,
-		key: any,
-		parent: any,
-		path: PathPart[],
-		obj: T,
-		range: PatchRange
-	) => void
+	val: any | undefined,
+	options?: {
+		reviver?<
+			Parent extends object,
+			Key extends keyof Parent,
+			Value extends Parent[Key]
+		>(context: {
+			parent: Parent
+			val: Value
+			key: Key
+			path: PathPart[]
+			obj: T
+			range: PatchRange
+		}): any
+		notify?(path: PathPart[], val: any | undefined): void
+	}
 ) {
 	let originalObject = target
 	let p = [...path]
@@ -72,8 +79,15 @@ export function apply<T>(
 	while (true) {
 		let key = p.shift()
 		if (!p.length) {
-			if (typeof reviver == "function") {
-				val = reviver(val, key, target, path, originalObject, range)
+			if (typeof options?.reviver == "function") {
+				val = options.reviver({
+					parent: target,
+					val,
+					key: key as keyof typeof target,
+					path,
+					obj: originalObject,
+					range,
+				})
 			}
 
 			const RANGE_ARRAY = Array.isArray(range)
@@ -238,7 +252,7 @@ export const patch = apply
 class OperationError extends Error {}
 
 export function fromAutomerge(autopatch: AutomergePatch): Patch
-export function fromAutomerge(autopatch: AutomergePatch) {
+export function fromAutomerge(autopatch: AutomergePatch): Patch {
 	let path = autopatch.path.slice(0, -1)
 	let key = autopatch.path[autopatch.path.length - 1]
 
