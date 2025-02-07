@@ -91,9 +91,8 @@ describe("Applying Patches", () => {
 			path: "people.entities.id-1",
 			expected: null,
 		},
-		/*
-    cabbages is ignoring increments until more data comes in
-    {
+
+		{
 			name: "increment counter",
 			patch: {
 				action: "inc",
@@ -102,7 +101,7 @@ describe("Applying Patches", () => {
 			},
 			path: "counter",
 			expected: 5,
-		}, */
+		},
 	]
 
 	const nextTests: {

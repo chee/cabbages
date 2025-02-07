@@ -1,6 +1,6 @@
 {
 	"name": "cabbages",
-	"version": "0.2.0",
+	"version": "0.2.2",
 	"description": "secret patch utility",
 	"main": "output/cabbages.js",
 	"types": "output/cabbages.d.ts",
@@ -23,10 +23,14 @@
 	"devDependencies": {
 		"@automerge/automerge": "^2.2.5",
 		"@automerge/automerge-repo": "^1.2.1",
+		"@types/debug": "^4.1.12",
 		"@types/node": "^20.14.11",
 		"tsup": "^8.2.2",
 		"tsx": "^4.19.2",
 		"typescript": "^5.5.3"
 	},
-	"packageManager": "pnpm@10.0.0+sha512.b8fef5494bd3fe4cbd4edabd0745df2ee5be3e4b0b8b08fa643aa3e4c6702ccc0f00d68fa8a8c9858a735a0032485a44990ed2810526c875e416f001b17df12b"
+	"packageManager": "pnpm@10.0.0+sha512.b8fef5494bd3fe4cbd4edabd0745df2ee5be3e4b0b8b08fa643aa3e4c6702ccc0f00d68fa8a8c9858a735a0032485a44990ed2810526c875e416f001b17df12b",
+	"dependencies": {
+		"debug": "^4.4.0"
+	}
 }

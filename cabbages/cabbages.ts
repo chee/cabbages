@@ -1,4 +1,11 @@
-import type {Patch as AutomergePatch} from "@automerge/automerge-repo/slim"
+import type {
+	Patch as AutomergePatch,
+	DocHandleChangePayload,
+} from "@automerge/automerge-repo/slim"
+import debug from "debug"
+const log = debug("cabbages")
+
+const inc = Symbol("inc")
 
 /**
  * A way to describe move, copy, wrap, cherry-pick and rich text
@@ -34,7 +41,9 @@ function type<T extends string>(string: T) {
 
 export type PatchRange = [number?, number?] | PathPart
 
-type Patch = [path: PathPart[], range: PatchRange, val?: any]
+type EmptyPatch = []
+
+type Patch = [path: PathPart[], range: PatchRange, val?: any] | EmptyPatch
 
 export function pojo(target: any): target is Record<string | number, any> {
 	return (
@@ -45,51 +54,25 @@ export function pojo(target: any): target is Record<string | number, any> {
 }
 
 /**
- * walk a path in an obj, optionally mutating it to insert missing parts
- * for the inspiration of @see https://github.com/braid-org/braid-spec/blob/aea85367d60793c113bdb305a4b4ecf55d38061d/draft-toomim-httpbis-range-patch-01.txt
+ * walk a path in an obj, optionally mutating it to insert missing parts for the
+ * inspiration of @see
+ * https://github.com/braid-org/braid-spec/blob/aea85367d60793c113bdb305a4b4ecf55d38061d/draft-toomim-httpbis-range-patch-01.txt
  *
- * to insert a string in an array, you need to wrap it in []
- *	to insert an array in an array you need to wrap it in []
+ * to insert a string in an array, you need to wrap it in [] to insert an array
+ *	in an array you need to wrap it in []
  */
 
-export function apply<T>(
-	target: any,
-	path: PathPart[],
-	range: PatchRange,
-	val: any | undefined,
-	options?: {
-		reviver?<
-			Parent extends object,
-			Key extends keyof Parent,
-			Value extends Parent[Key]
-		>(context: {
-			parent: Parent
-			val: Value
-			key: Key
-			path: PathPart[]
-			obj: T
-			range: PatchRange
-		}): any
-		notify?(path: PathPart[], val: any | undefined): void
+export function apply(target: any, ...rest: Patch) {
+	if (rest.length == 0) {
+		log("empty patch")
+		return
 	}
-) {
-	let originalObject = target
+	const [path, range, val] = rest
 	let p = [...path]
 
 	while (true) {
 		let key = p.shift()
 		if (!p.length) {
-			if (typeof options?.reviver == "function") {
-				val = options.reviver({
-					parent: target,
-					val,
-					key: key as keyof typeof target,
-					path,
-					obj: originalObject,
-					range,
-				})
-			}
-
 			const RANGE_ARRAY = Array.isArray(range)
 
 			if (
@@ -195,8 +178,12 @@ export function apply<T>(
 				if (typeof range != "string") {
 					throw new Error(`can't index top-level map with ${range}`)
 				}
+
+				// put/delete
 				if (typeof val == "undefined") {
 					delete target[range]
+				} else if (Array.isArray(val) && val[0] == inc) {
+					target[range] += val[1]
 				} else {
 					target[range] = val
 				}
@@ -219,6 +206,8 @@ export function apply<T>(
 			} else {
 				if (typeof val == "undefined") {
 					delete target[key][range]
+				} else if (Array.isArray(val) && val[0] == inc) {
+					target[range] += val[1]
 				} else {
 					target[key][range] = val
 				}
@@ -249,19 +238,41 @@ export function apply<T>(
 
 export const patch = apply
 
-class OperationError extends Error {}
+function get(obj: object, key: (string | number)[]) {
+	for (let p = 0; p < key.length; p++) {
+		obj = obj ? obj[key[p]] : undefined
+	}
+	return obj
+}
 
-export function fromAutomerge(autopatch: AutomergePatch): Patch
-export function fromAutomerge(autopatch: AutomergePatch): Patch {
-	let path = autopatch.path.slice(0, -1)
-	let key = autopatch.path[autopatch.path.length - 1]
+export function fromAutomerge(
+	autopatch: AutomergePatch,
+	payload?: DocHandleChangePayload<any>
+): Patch {
+	const path = autopatch.path.slice(0, -1)
+	const key = autopatch.path[autopatch.path.length - 1]
 
 	switch (autopatch.action) {
-		case "conflict":
-		case "inc":
 		case "mark":
 		case "unmark":
-			throw new OperationError(`can't handle this: ${autopatch.action}`)
+			log(
+				`skipping ${autopatch.action} because it doesn't affect material reality`
+			)
+			return []
+		case "inc":
+			if (payload) {
+				return [path, key, get(payload.patchInfo.after, path)]
+			} else {
+				return [path, key, [inc, autopatch.value]]
+			}
+		case "conflict":
+			if (payload) {
+				return [path, key, get(payload.patchInfo.after, path)]
+			} else {
+				throw new Error(
+					`can't apply ${autopatch.action} without payload argument`
+				)
+			}
 		case "del": {
 			return typeof key == "string"
 				? [path, key]

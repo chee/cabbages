@@ -181,35 +181,4 @@ test.test("patch", async t => {
 
 		assert.equal(obj.a.b.c.d.e.f.g.h.i, "computer")
 	})
-
-	await t.test("uses reviver", t => {
-		let path = ["projects", "abc", "items", 2]
-		let obj = {}
-		apply(
-			obj,
-			path,
-			"count",
-			{
-				type: "special:counter",
-				value: 4,
-			},
-			{
-				reviver({val}) {
-					if (
-						val &&
-						typeof val == "object" &&
-						"type" in val &&
-						val.type == "special:counter" &&
-						"value" in val
-					) {
-						return val.value
-					}
-				},
-			}
-		)
-		assert.deepEqual(obj, {
-			// biome-ignore lint/suspicious/noSparseArray: <explanation>
-			projects: {abc: {items: [, , {count: 4}]}},
-		})
-	})
 })
