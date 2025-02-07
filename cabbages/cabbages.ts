@@ -238,7 +238,7 @@ export function apply(target: any, ...rest: Patch) {
 
 export const patch = apply
 
-function get(obj: object, key: (string | number)[]) {
+function get(obj: any, key: (string | number)[]) {
 	for (let p = 0; p < key.length; p++) {
 		obj = obj ? obj[key[p]] : undefined
 	}
