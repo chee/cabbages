@@ -101,7 +101,7 @@ export function apply(target: any, ...rest: Patch) {
 				const DELETE = typeof val == "undefined"
 				const INSERT = start === end && !DELETE
 				const APPEND = ZERO_LENGTH && !DELETE
-				let op = DELETE
+				const op = DELETE
 					? ("del" as const)
 					: APPEND
 					? ("add" as const)
@@ -168,6 +168,7 @@ export function apply(target: any, ...rest: Patch) {
 
 				if (pojo(seq) && RANGE_ARRAY && typeof range[0] == "string") {
 					delete seq[range[0]]
+					return
 				}
 
 				// todo should impl for typed arrays?
@@ -261,13 +262,13 @@ export function fromAutomerge(
 			return []
 		case "inc":
 			if (payload) {
-				return [path, key, get(payload.patchInfo.after, path)]
+				return [path, key, get(payload.patchInfo.after, autopatch.path)]
 			} else {
 				return [path, key, [inc, autopatch.value]]
 			}
 		case "conflict":
 			if (payload) {
-				return [path, key, get(payload.patchInfo.after, path)]
+				return [path, key, get(payload.patchInfo.after, autopatch.path)]
 			} else {
 				throw new Error(
 					`can't apply ${autopatch.action} without payload argument`

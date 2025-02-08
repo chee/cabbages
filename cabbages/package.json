@@ -1,6 +1,6 @@
 {
 	"name": "cabbages",
-	"version": "0.2.2",
+	"version": "0.2.4",
 	"description": "secret patch utility",
 	"main": "output/cabbages.js",
 	"types": "output/cabbages.d.ts",
