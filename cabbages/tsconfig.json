@@ -14,5 +14,5 @@
 		"noEmit": true,
 		"allowImportingTsExtensions": true
 	},
-	"files": ["cabbages/cabbages.ts", "cabbages/cabbages.test.ts"]
+	"files": ["cabbages.ts", "cabbages.test.ts"]
 }
