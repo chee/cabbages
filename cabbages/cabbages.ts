@@ -264,7 +264,9 @@ export function fromAutomerge(
 			if (payload) {
 				return [path, key, get(payload.patchInfo.after, autopatch.path)]
 			} else {
-				return [path, key, [inc, autopatch.value]]
+				throw new Error(
+					`can't apply ${autopatch.action} without payload argument`
+				)
 			}
 		case "conflict":
 			if (payload) {
