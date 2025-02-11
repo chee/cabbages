@@ -5,8 +5,6 @@ import type {
 import debug from "debug"
 const log = debug("cabbages")
 
-const inc = Symbol("inc")
-
 /**
  * A way to describe move, copy, wrap, cherry-pick and rich text
  * @see https://braid.org/meeting-62/portals
@@ -183,8 +181,6 @@ export function apply(target: any, ...rest: Patch) {
 				// put/delete
 				if (typeof val == "undefined") {
 					delete target[range]
-				} else if (Array.isArray(val) && val[0] == inc) {
-					target[range] = +target[range] + val[1]
 				} else {
 					target[range] = val
 				}
@@ -207,8 +203,6 @@ export function apply(target: any, ...rest: Patch) {
 			} else {
 				if (typeof val == "undefined") {
 					delete target[key][range]
-				} else if (Array.isArray(val) && val[0] == inc) {
-					target[range] = +target[range] + val[1]
 				} else {
 					target[key][range] = val
 				}
