@@ -184,7 +184,7 @@ export function apply(target: any, ...rest: Patch) {
 				if (typeof val == "undefined") {
 					delete target[range]
 				} else if (Array.isArray(val) && val[0] == inc) {
-					target[range] += val[1]
+					target[range] = +target[range] + val[1]
 				} else {
 					target[range] = val
 				}
@@ -208,7 +208,7 @@ export function apply(target: any, ...rest: Patch) {
 				if (typeof val == "undefined") {
 					delete target[key][range]
 				} else if (Array.isArray(val) && val[0] == inc) {
-					target[range] += val[1]
+					target[range] = +target[range] + val[1]
 				} else {
 					target[key][range] = val
 				}
