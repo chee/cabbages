@@ -168,6 +168,7 @@ test.test("patch", async t => {
 		)
 
 		assert.equal(
+			// @ts-expect-error it's ok ts
 			obj[1][2][3][4][5][6].lol.ok.deeeeeep[0][1][2].hehe.ok,
 			"computer"
 		)
@@ -181,4 +182,27 @@ test.test("patch", async t => {
 
 		assert.equal(obj.a.b.c.d.e.f.g.h.i, "computer")
 	})
+
+	await t.test("handles the bizarre splitBlock API", t => {
+		let obj = {text: "hello"}
+		apply(obj, ["text"], [2, 2], [{}])
+		assert.equal(obj.text[2], "\ufffc")
+		apply(obj, ["text", 2], "type", "")
+		assert.equal(obj.text[2], "\ufffc")
+		apply(obj, ["text", 2, "type"], [0, 0], "paragraph")
+		assert.equal(obj.text[2], "\ufffc")
+		assert.equal(obj.text, "he\ufffcllo")
+	})
+
+	await t.test(
+		"can set a value on an object with a key of the block placeholder",
+		t => {
+			let obj = {["\ufffc"]: "hello"}
+			apply(obj, [], "\ufffc", "world")
+			assert.equal(obj["\ufffc"], "world")
+			let sobj = {sub: {["\ufffc"]: "hello"}}
+			apply(sobj, ["sub"], "\ufffc", "world")
+			assert.equal(sobj.sub["\ufffc"], "world")
+		}
+	)
 })

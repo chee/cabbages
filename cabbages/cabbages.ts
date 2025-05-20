@@ -4,6 +4,7 @@ import type {
 } from "@automerge/automerge-repo/slim"
 import debug from "debug"
 const log = debug("cabbages")
+console.log("i am being used update again and again")
 
 /**
  * A way to describe move, copy, wrap, cherry-pick and rich text
@@ -50,6 +51,8 @@ export function pojo(target: any): target is Record<string | number, any> {
 		Object.getPrototypeOf(target) == Object.prototype
 	)
 }
+
+const BLOCK_MARKER = "\ufffc"
 
 /**
  * walk a path in an obj, optionally mutating it to insert missing parts for the
@@ -99,17 +102,14 @@ export function apply(target: any, ...rest: Patch) {
 				const DELETE = typeof val == "undefined"
 				const INSERT = start === end && !DELETE
 				const APPEND = ZERO_LENGTH && !DELETE
-				const op = DELETE
-					? ("del" as const)
-					: APPEND
-					? ("add" as const)
-					: INSERT
-					? ("ins" as const)
-					: ("replace" as const)
+				const REPLACE = !INSERT && !DELETE && !APPEND
 
 				if (typeof target[key] == "undefined") {
+					if (typeof target == "string") {
+						return
+					}
 					// todo what if it's a function that would return a string?
-					if (typeof val == "string") {
+					else if (typeof val == "string") {
 						target[key] = ""
 					} else {
 						target[key] = []
@@ -118,50 +118,47 @@ export function apply(target: any, ...rest: Patch) {
 				let seq = target[key]
 
 				if (Array.isArray(seq)) {
-					switch (op) {
-						case "add": {
-							Array.isArray(val) ? seq.push(...val) : seq.push(val)
-							return
-						}
-						case "replace":
-						case "ins": {
-							Array.isArray(val)
-								? seq.splice(start!, end! - start!, ...val)
-								: seq.splice(start!, end! - start!, val)
-							return
-						}
-						case "del": {
-							seq.splice(start!, end! - start!)
-							return
-						}
-						default: {
-							throw new Error("i don't know what happened")
-						}
+					if (APPEND) {
+						Array.isArray(val) ? seq.push(...val) : seq.push(val)
+						return
 					}
+					if (INSERT || REPLACE) {
+						Array.isArray(val)
+							? seq.splice(start!, end! - start!, ...val)
+							: seq.splice(start!, end! - start!, val)
+						return
+					}
+					if (DELETE) {
+						seq.splice(start!, end! - start!)
+						return
+					}
+					throw new Error("i don't know what happened")
 				}
 
 				if (typeof seq == "string") {
-					switch (op) {
-						case "add": {
-							target[key] = seq + val
-							return
-						}
-						case "replace":
-						case "ins": {
-							target[key] =
-								seq.slice(0, start) +
-								(typeof val == "string" ? val : val.join("")) +
-								seq.slice(end)
-							return
-						}
-						case "del": {
-							target[key] = seq.slice(0, start) + seq.slice(end)
-							return
-						}
-						default: {
-							throw new Error("i don't know what happened")
-						}
+					if (APPEND) {
+						target[key] = seq + val
+						return
 					}
+					if (REPLACE || INSERT) {
+						target[key] =
+							seq.slice(0, start) +
+							(typeof val == "string"
+								? val
+								: val
+										.map((n: string | {}) =>
+											typeof n == "string" ? n : BLOCK_MARKER
+										)
+										.join("")) +
+							seq.slice(end)
+						return
+					}
+					if (DELETE) {
+						target[key] = seq.slice(0, start) + seq.slice(end)
+						return
+					}
+
+					throw new Error("i don't know what happened")
 				}
 
 				if (pojo(seq) && RANGE_ARRAY && typeof range[0] == "string") {
@@ -203,6 +200,9 @@ export function apply(target: any, ...rest: Patch) {
 			} else {
 				if (typeof val == "undefined") {
 					delete target[key][range]
+				} else if (typeof target[key] == "string") {
+					// trying to set a value on a character of a string :: bonkers!
+					return
 				} else {
 					target[key][range] = val
 				}
