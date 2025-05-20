@@ -4,7 +4,6 @@ import type {
 } from "@automerge/automerge-repo/slim"
 import debug from "debug"
 const log = debug("cabbages")
-console.log("i am being used update again and again")
 
 /**
  * A way to describe move, copy, wrap, cherry-pick and rich text
