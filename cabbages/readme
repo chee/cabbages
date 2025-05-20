@@ -1,1 +1,6 @@
-nothing to see here
+this package is for applying braid.org-like patches to a javascript object
+
+it has a function for converting an automerge patch into a braid.org-like patch
+
+it is useful for keeping a fine-grained deeply reactive object / signal store
+up to date with an automerge doc
